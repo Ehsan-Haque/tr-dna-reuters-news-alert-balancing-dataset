@@ -1,0 +1,7 @@
+sentence-transformers
+scikit-learn
+numpy
+pandas
+transformers
+huggingface-hub
+matplotlib
