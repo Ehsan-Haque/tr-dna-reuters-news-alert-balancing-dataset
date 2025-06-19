@@ -1,4 +1,4 @@
-# Python CSV Alert Counter
+# tr-dna-reuters-news-alert-balancing-dataset
 
 This tool reads a CSV file with columns: `serial`, `alert`, `codes`.  
 It counts how many alerts belong to each class (codes can be space-separated), and also groups similar classes into semantic clusters using sentence embeddings.
