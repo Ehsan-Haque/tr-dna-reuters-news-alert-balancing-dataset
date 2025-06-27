@@ -12,6 +12,6 @@ def read_alerts_from_csv(filepath):
             alerts.append({
                 'serial': row.get('serial') or row.get('Serial') or row.get('Serial Number'),
                 'alert': row['alert'],
-                'codes': row['codes']
+                'codes': row['codes'].split()  # Split codes by blank space
             })
     return alerts

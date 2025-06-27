@@ -4,58 +4,67 @@ from csv_reader import read_alerts_from_csv
 from alert_counter import count_alerts_by_class
 from utils import print_class_counts
 from semantic_cluster import semantic_cluster_classes
+from hierarchical_cluster import (
+    hierarchical_cluster_cooccurrence,
+    print_clusters
+)
 import matplotlib.pyplot as plt
+from collections import defaultdict
 
-def main():
-    # Hardcoded CSV file path
-    filepath = r"C:\tr-dna-reuters-news-alert-balancing-dataset\topics_clean.csv"
-    alerts = read_alerts_from_csv(filepath)
-    class_counts = count_alerts_by_class(alerts)
-    print_class_counts(class_counts)
-    print(f"\nTotal number of classes: {len(class_counts)}")
-
-    # Semantic clustering
-    n_clusters = 20  # You can adjust this number
-    clusters = semantic_cluster_classes(list(class_counts.keys()), n_clusters=n_clusters)
-
-    # Prepare cluster info with alert counts
-    cluster_info = []
-    for label, class_list in clusters.items():
-        total_alerts = sum(class_counts.get(class_name, 0) for class_name in class_list)
-        cluster_info.append((label, class_list, total_alerts))
-
-    # Sort clusters by total_alerts (ascending)
-    cluster_info.sort(key=lambda x: x[2])
-
-    print(f"\nSemantic Clusters (sorted by alert count, showing up to 5 classes per cluster):")
-    for label, class_list, total_alerts in cluster_info:
-        print(
-            f"Cluster {label} ({len(class_list)} classes, {total_alerts} alerts): "
-            f"{', '.join(class_list[:5])}{'...' if len(class_list) > 5 else ''}"
-        )
-
-    # After you have clusters and their alert counts, e.g.:
-    # clusters = [(cluster_id, [class1, class2, ...], total_alerts), ...]
-    # Let's assume you have a list of tuples: (cluster_id, class_names, total_alerts)
-
-    # Example: clusters = [(3, ['JP', 'NEWS1'], 2), (7, ['QUAK', 'DIS'], 2), ...]
-
-    # Sort clusters by total_alerts (ascending)
-    clusters_sorted = sorted(cluster_info, key=lambda x: x[2])
-
-    # Prepare data for plotting
-    cluster_labels = [f"Cluster {c[0]}" for c in clusters_sorted]
-    alert_counts = [c[2] for c in clusters_sorted]
-
-    # Plot
+def plot_cluster_alerts(cluster_dict, class_counts, title):
+    """
+    Plots a bar chart: cluster number vs number of alerts in that cluster.
+    """
+    cluster_labels = []
+    alert_counts = []
+    for idx, (cluster, code_list) in enumerate(sorted(cluster_dict.items()), 1):
+        num_alerts = sum(class_counts.get(code, 0) for code in code_list)
+        cluster_labels.append(f"Cluster {idx}")
+        alert_counts.append(num_alerts)
     plt.figure(figsize=(10, 6))
     plt.bar(cluster_labels, alert_counts, color='skyblue')
     plt.xlabel('Cluster')
     plt.ylabel('Number of Alerts')
-    plt.title('Number of Alerts per Cluster (Lowest to Highest)')
+    plt.title(title)
     plt.xticks(rotation=45, ha='right')
     plt.tight_layout()
     plt.show()
+
+def main():
+    # Path to your CSV file
+    filepath = r"C:\tr-dna-reuters-news-alert-balancing-dataset\topics_clean.csv"
+    alerts = read_alerts_from_csv(filepath)
+    class_counts = count_alerts_by_class(alerts)
+    print_class_counts(class_counts)
+    print(f"Number of unique classes/codes: {len(class_counts)}")
+
+    # --- Semantic Clustering ---
+    print("\nSemantic Clustering of Codes:")
+    n_clusters = 30  # Set number of clusters to 30
+    semantic_clusters = semantic_cluster_classes(
+        list(class_counts.keys()), class_counts, n_clusters, plot_graph=False
+    )
+
+    # Prepare cluster dict for plotting
+    semantic_cluster_dict = {}
+    for idx, cluster in enumerate(semantic_clusters):
+        semantic_cluster_dict[idx + 1] = cluster['classes']
+
+    plot_cluster_alerts(semantic_cluster_dict, class_counts, "Semantic Cluster vs Number of Alerts")
+
+    # --- Hierarchical Clustering (Co-occurrence) ---
+    print("\nHierarchical Clustering of Codes (Co-occurrence Analysis):")
+    codes, clusters = hierarchical_cluster_cooccurrence(
+        alerts, plot_dendrogram=False, max_d=0.7
+    )
+
+    # Prepare cluster dict for reporting (no graph)
+    hierarchical_cluster_dict = defaultdict(list)
+    for code, cluster in zip(codes, clusters):
+        hierarchical_cluster_dict[cluster].append(code)
+
+    print(f"Number of clusters in hierarchical cluster algorithm: {len(hierarchical_cluster_dict)}\n")
+    print_clusters(codes, clusters, class_counts)
 
 if __name__ == "__main__":
     main()

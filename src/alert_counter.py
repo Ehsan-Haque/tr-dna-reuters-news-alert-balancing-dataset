@@ -1,14 +1,14 @@
-from collections import defaultdict
+from collections import Counter
 
 
 def count_alerts_by_class(alerts):
     """
-    Counts how many alerts belong to each class.
-    Returns a dictionary: {class_name: count}
+    Counts the number of alerts per class.
+    Returns a dictionary: class_code -> count
     """
-    class_counts = defaultdict(int)
+    class_counter = Counter()
     for alert in alerts:
-        codes = alert['codes'].split()
+        codes = alert['codes']  # codes is already a list
         for code in codes:
-            class_counts[code] += 1
-    return dict(class_counts)
+            class_counter[code] += 1
+    return dict(class_counter)

@@ -1,163 +1,75 @@
 # tr-dna-reuters-news-alert-balancing-dataset
 
-This tool reads a CSV file with columns: `serial`, `alert`, `codes`.  
-It counts how many alerts belong to each class (codes can be space-separated), and also groups similar classes into semantic clusters using sentence embeddings.
-
----
+This project processes a CSV file of news alerts, each with associated codes (classes), and provides two clustering methods for analyzing the codes:
 
 ## Features
 
-- **Counts alerts per class** (even if an alert belongs to multiple classes)
-- **Semantic clustering**: Groups similar classes using AI-based embeddings
-- **Shows number of classes and total alerts in each cluster**
-- **Clusters are sorted by total alert count (lowest first)**
+- **Semantic Clustering:**  
+  Groups codes based on their semantic meaning using sentence embeddings and KMeans clustering. You can control the number of clusters (default: 30).
 
----
+- **Hierarchical Clustering (Co-occurrence Analysis):**  
+  Groups codes that frequently appear together in the same alert using hierarchical clustering. The number of clusters can be adjusted by changing the `max_d` parameter.
+
+- **Visualization:**  
+  Plots a bar chart showing the number of alerts in each semantic cluster.
+
+- **Flexible Input:**  
+  Reads a CSV file with columns: `serial`, `alert`, `codes`. The `codes` column should contain space-separated codes (e.g., `ASIA MIDDLEEAST IRAN ISRAEL WAR GASPRICE`).
+
+## How It Works
+
+1. **Read Data:**  
+   Loads alerts and splits the codes column by spaces.
+
+2. **Count Alerts:**  
+   Counts how many alerts belong to each code.
+
+3. **Semantic Clustering:**  
+   - Uses sentence embeddings to represent codes.
+   - Applies KMeans to group codes by meaning.
+
+4. **Hierarchical Clustering:**  
+   - Builds a co-occurrence matrix of codes.
+   - Uses hierarchical clustering to group codes that often appear together.
+
+5. **Visualization:**  
+   - Plots the number of alerts per semantic cluster.
 
 ## Usage
 
-1. Place your CSV file at:
-   ```
-   C:\tr-dna-reuters-news-alert-balancing-dataset\topics_clean.csv
-   ```
-   The CSV should have columns: `serial`, `alert`, `codes`.
-
-2. Install dependencies:
-   ```
-   pip install -r requirements.txt
-   ```
-
-3. Download the model files for `all-MiniLM-L6-v2` from Hugging Face and place them in:
-   ```
-   C:\tr-dna-reuters-news-alert-balancing-dataset\models\all-MiniLM-L6-v2
-   ```
-   (See instructions in this README or ask for help if needed.)
-
-4. Run the program:
+1. Place your CSV file (e.g., `topics_clean.csv`) in the project directory.
+2. Update the file path in `main.py` if needed.
+3. Run the main script:
    ```
    python src/main.py
    ```
+4. Adjust the number of semantic clusters (`n_clusters`) or hierarchical cluster threshold (`max_d`) in `main.py` as needed.
 
----
+## Example CSV Format
 
-## Example CSV
-
-| serial | alert         | codes                       |
-|--------|--------------|-----------------------------|
-| 1      | Alert text 1 | ASIA ASXPAC DIS EASIA GEN   |
-| 2      | Alert text 2 | JP NEWS1 QUAK               |
-
----
-
-## Example Output
-
-```
-Alert counts by class:
-ASIA: 1
-ASXPAC: 1
-DIS: 1
-EASIA: 1
-GEN: 1
-JP: 1
-NEWS1: 1
-QUAK: 1
-
-Total number of classes: 8
-
-Semantic Clusters (sorted by alert count, showing up to 5 classes per cluster):
-Cluster 3 (2 classes, 2 alerts): JP, NEWS1
-Cluster 7 (2 classes, 2 alerts): QUAK, DIS
-Cluster 12 (2 classes, 2 alerts): ASIA, EASIA
-Cluster 15 (2 classes, 2 alerts): ASXPAC, GEN
-...
-```
-
----
-
-## Model Download Instructions
-
-If you cannot download the model automatically, do this:
-
-1. Install [Git LFS](https://git-lfs.com/).
-2. Open Command Prompt and run:
-   ```
-   git lfs install
-   git clone https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2 C:\python-csv-alert-counter\models\all-MiniLM-L6-v2
-   ```
-3. Or, download all files from the [model page](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2) and place them in the folder above.
-
----
+| serial | alert                | codes                               |
+|--------|----------------------|-------------------------------------|
+| 1      | Iran vs Israel war   | ASIA MIDDLEEAST IRAN ISRAEL WAR     |
+| 2      | Gas price up         | GASPRICE STOCKPRICE                 |
 
 ## Requirements
 
-- Python 3.13
-- `sentence-transformers`
+- Python 3.8+
 - `scikit-learn`
+- `sentence-transformers`
+- `matplotlib`
+- `scipy`
+- (See `requirements.txt`)
 
-Install with:
-```
-pip install -r requirements.txt
-```
+## Notes
 
----
+- The project does **not** reconstruct the true parent-child hierarchy of codes; it groups codes by co-occurrence or semantic similarity.
+- The number of clusters for each method is user-configurable.
 
-## Customization
+## License
 
-- Change the number of clusters by editing `n_clusters` in `src/main.py`.
-- Change the CSV file path by editing `filepath` in `src/main.py`.
-
----
-
-## Troubleshooting
-
-- If you see SSL or certificate errors, try updating `certifi` or manually downloading the model as described above.
-- If you see a warning about "No sentence-transformers model found", make sure all model files are present in the correct folder.
+MIT License
 
 ---
 
-## Architecture Overview
-
-```
-+-------------------------+
-|    topics_clean.csv     |
-| (serial, alert, codes)  |
-+-----------+-------------+
-            |
-            v
-+-------------------------+
-|   CSV Reader Module     |
-| (src/csv_reader.py)     |
-+-----------+-------------+
-            |
-            v
-+-------------------------+
-|  Alert Counter Module   |
-| (src/alert_counter.py)  |
-+-----------+-------------+
-            |
-            v
-+-------------------------+
-|  Semantic Clustering    |
-| (src/semantic_cluster.py)|
-|  - Loads MiniLM model   |
-+-----------+-------------+
-            |
-            v
-+-------------------------+
-|      Output/Utils       |
-| (src/utils.py, main.py) |
-+-------------------------+
-            |
-            v
-+-------------------------+
-|   Console Output        |
-+-------------------------+
-```
-
-**Flow:**
-1. The CSV is read and parsed.
-2. Alerts are counted per class.
-3. Classes are embedded and clustered semantically.
-4. Results are formatted and printed.
-
----
+Let me know if you want to add usage examples, architecture diagrams, or
